@@ -5,42 +5,42 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Carbon\CarbonImmutable;
-use Database\Factories\UserFactory;
+use App\Enums\UserStatus;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 use Override;
 
 /**
  * @property string $id
- * @property string $name
- * @property string $email
- * @property CarbonImmutable|null $email_verified_at
- * @property string $password
+ * @property string|null $name
+ * @property string|null $email
+ * @property Carbon|null $email_verified_at
+ * @property string|null $password
+ * @property UserStatus $status
+ * @property string|null $verification_code
+ * @property Carbon|null $verification_code_expire_at
  * @property string|null $remember_token
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
- * @property-read int|null $notifications_count
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read Collection<int, PersonalAccessToken> $tokens
- * @property-read int|null $tokens_count
  */
 final class User extends Authenticatable
 {
     use HasApiTokens;
-
-    /** @use HasFactory<UserFactory> */
     use HasFactory;
-
     use HasUuids;
     use Notifiable;
+    use SoftDeletes;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -51,7 +51,20 @@ final class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'updated_at',
+        'deleted_at',
     ];
+
+    public function isActive(): bool
+    {
+        return $this->status === UserStatus::ACTIVE;
+    }
+
+    #[Scope]
+    protected function getUserByEmail(Builder $query, string $email): Builder
+    {
+        return $query->where('email', $email);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -61,8 +74,13 @@ final class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'name' => 'string',
+            'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'status' => UserStatus::class,
+            'verification_code' => 'string',
+            'verification_code_expire_at' => 'datetime',
         ];
     }
 }
