@@ -16,11 +16,14 @@ final readonly class CreateSessionAction
         private UserValidator $userValidator
     ) {}
 
-    public function handle(array $data): User
+    public function handle(string $email, string $password): User
     {
-        $user = User::getUserByEmail($data['email'])->first();
-        $this->userValidator->validateUserCredentials($user, $data['password']);
+        $user = User::query()->whereEmail($email)->first();
+
+        $this->userValidator->validateUserCredentials($user, $password);
         $this->userValidator->validateUserIsActive($user);
+
+        assert($user instanceof User);
 
         $this->tokenManager->createAccessToken($user, Constants::LOGIN_TOKEN_TYPE);
 

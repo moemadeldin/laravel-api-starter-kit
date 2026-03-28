@@ -20,8 +20,21 @@ final readonly class RegisterController
      */
     public function __invoke(StoreUserRequest $request, CreateUserAction $action): JsonResponse
     {
+        $validated = $request->validated();
+
+        /** @var string $name */
+        $name = $validated['name'];
+
+        /** @var string $email */
+        $email = $validated['email'];
+
+        /** @var string $password */
+        $password = $validated['password'];
+
         return $this->success(
-            $action->handle($request->validated()),
+            $action->handle($name,
+                $email,
+                $password),
             SuccessMessages::USER_REGISTERED, Response::HTTP_CREATED
         );
     }

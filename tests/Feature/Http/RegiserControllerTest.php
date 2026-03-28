@@ -15,7 +15,7 @@ it('can register a user', function (): void {
 
     $response->assertStatus(Response::HTTP_CREATED);
 
-    $user = User::getUserByEmail('johndoe@gmail.com')->first();
+    $user = User::query()->whereEmail('johndoe@gmail.com')->first();
 
     expect($user)
         ->not()

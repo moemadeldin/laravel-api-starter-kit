@@ -25,11 +25,17 @@ final readonly class SessionController
     public function store(StoreSessionRequest $request, CreateSessionAction $action): JsonResponse
     {
         try {
+            $validated = $request->validated();
+
+            /** @var string $email */
+            $email = $validated['email'];
+
+            /** @var string $password */
+            $password = $validated['password'];
+
             return $this->success(
                 new SessionResource(
-                    $action->handle(
-                        $request->validated()
-                    ),
+                    $action->handle($email, $password),
                 ),
                 SuccessMessages::USER_LOGGED_IN
             );

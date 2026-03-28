@@ -20,12 +20,19 @@ final readonly class UserValidator
 
     public function validateUserIsActive(?User $user): void
     {
-        throw_unless($user->isActive(), AuthException::class, ErrorMessages::AUTHENTICATION_FAILED, Response::HTTP_FORBIDDEN);
+        throw_unless($user instanceof User && $user->isActive(), AuthException::class, ErrorMessages::AUTHENTICATION_FAILED, Response::HTTP_FORBIDDEN);
     }
 
-    public function validateUserCredentials(User $user, #[SensitiveParameter] string $password): void
+    public function validateUserCredentials(?User $user, #[SensitiveParameter] string $password): void
     {
-        throw_unless(Hash::check($password, $user->password), AuthException::class, ErrorMessages::INVALID_CREDENTIALS, Response::HTTP_BAD_REQUEST);
+        throw_unless($user instanceof User, AuthException::class, ErrorMessages::INVALID_CREDENTIALS, Response::HTTP_BAD_REQUEST);
+
+        throw_unless(
+            Hash::check($password, $user->password ?? ''),
+            AuthException::class,
+            ErrorMessages::INVALID_CREDENTIALS,
+            Response::HTTP_BAD_REQUEST
+        );
     }
 
     public function validateVerificationCode(User $user, string $verificationCode): void

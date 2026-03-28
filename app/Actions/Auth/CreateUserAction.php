@@ -14,9 +14,13 @@ final readonly class CreateUserAction
         private TokenManager $tokenManager,
     ) {}
 
-    public function handle(array $data): User
+    public function handle(string $name, string $email, string $password): User
     {
-        $user = User::query()->create($data);
+        $user = User::query()->create([
+            'name' => $name,
+            'email' => $email,
+            'password' => $password,
+        ]);
         $this->tokenManager->createAccessToken($user, Constants::REGISTER_TOKEN_TYPE);
 
         return $user;
